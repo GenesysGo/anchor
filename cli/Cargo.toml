@@ -28,11 +28,11 @@ shellexpand = "2.1.0"
 toml = "0.5.8"
 semver = "1.0.4"
 serde = { version = "1.0.122", features = ["derive"] }
-solana-sdk = "~1.11.7"
-solana-program = "~1.11.7"
-solana-client = "~1.11.7"
-solana-cli-config = "~1.11.7"
-solana-faucet = "~1.11.7"
+solana-sdk = { git = "https://github.com/GenesysGo/solana-das", branch = "cavey/das" }
+solana-program = { git = "https://github.com/GenesysGo/solana-das", branch = "cavey/das" }
+solana-client = { git = "https://github.com/GenesysGo/solana-das", branch = "cavey/das" }
+solana-cli-config = { git = "https://github.com/GenesysGo/solana-das", branch = "cavey/das" }
+solana-faucet = { git = "https://github.com/GenesysGo/solana-das", branch = "cavey/das" }
 dirs = "3.0"
 heck = "0.3.1"
 flate2 = "1.0.19"
