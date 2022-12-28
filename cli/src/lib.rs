@@ -1019,7 +1019,7 @@ fn build_cwd_verifiable(
         Ok(_) => {
             // Build the idl.
             println!("Extracting the IDL");
-            if let Ok(Some(idl)) = extract_idl(cfg, "src/lib.rs", skip_lint, no_docs) {
+            if let Ok(Some(idl)) = extract_idl("src/lib.rs", skip_lint, no_docs) {
                 // Write out the JSON file.
                 println!("Writing the IDL file");
                 let out_file = workspace_dir.join(format!("target/idl/{}.json", idl.name));
@@ -1305,7 +1305,7 @@ fn _build_cwd(
     }
 
     // Always assume idl is located at src/lib.rs.
-    if let Some(idl) = extract_idl(cfg, "src/lib.rs", skip_lint, false)? {
+    if let Some(idl) = extract_idl("src/lib.rs", skip_lint, false)? {
         // JSON out path.
         let out = match idl_out {
             None => PathBuf::from(".").join(&idl.name).with_extension("json"),
@@ -1394,7 +1394,7 @@ fn verify(
     }
 
     // Verify IDL (only if it's not a buffer account).
-    if let Some(local_idl) = extract_idl(&cfg, "src/lib.rs", true, false)? {
+    if let Some(local_idl) = extract_idl("src/lib.rs", true, false)? {
         if bin_ver.state != BinVerificationState::Buffer {
             let deployed_idl = fetch_idl(cfg_override, program_id)?;
             if local_idl != deployed_idl {
@@ -1572,7 +1572,7 @@ fn fetch_idl(cfg_override: &ConfigOverride, idl_addr: Pubkey) -> Result<Idl> {
 }
 
 fn extract_idl(
-    cfg: &WithPath<Config>,
+    // cfg: &WithPath<Config>,
     file: &str,
     skip_lint: bool,
     no_docs: bool,
@@ -1581,13 +1581,7 @@ fn extract_idl(
     let manifest_from_path = std::env::current_dir()?.join(PathBuf::from(&*file).parent().unwrap());
     let cargo = Manifest::discover_from_path(manifest_from_path)?
         .ok_or_else(|| anyhow!("Cargo.toml not found"))?;
-    anchor_syn::idl::file::parse(
-        &*file,
-        cargo.version(),
-        cfg.features.seeds,
-        no_docs,
-        !(cfg.features.skip_lint || skip_lint),
-    )
+    anchor_syn::idl::file::parse(&*file, cargo.version(), false, no_docs, !(skip_lint))
 }
 
 fn idl(cfg_override: &ConfigOverride, subcmd: IdlCommand) -> Result<()> {
@@ -1883,8 +1877,8 @@ fn idl_parse(
     out_ts: Option<String>,
     no_docs: bool,
 ) -> Result<()> {
-    let cfg = Config::discover(cfg_override)?.expect("Not in workspace.");
-    let idl = extract_idl(&cfg, &file, true, no_docs)?.ok_or_else(|| anyhow!("IDL not parsed"))?;
+    // let cfg = Config::discover(cfg_override)?.expect("Not in workspace.");
+    let idl = extract_idl(&file, true, no_docs)?.ok_or_else(|| anyhow!("IDL not parsed"))?;
     let out = match out {
         None => OutFile::Stdout,
         Some(out) => OutFile::File(PathBuf::from(out)),
@@ -2144,6 +2138,19 @@ fn deserialize_idl_type_to_json(
             }
 
             JsonValue::Array(array_data)
+        }
+        IdlType::HashSet(ty) => {
+            let size: usize = <u32 as AnchorDeserialize>::deserialize(data)?
+                .try_into()
+                .unwrap();
+
+            let mut vec_data: Vec<JsonValue> = Vec::with_capacity(size);
+
+            for _ in 0..size {
+                vec_data.push(deserialize_idl_type_to_json(ty, data, parent_idl)?);
+            }
+
+            JsonValue::Array(vec_data)
         }
     })
 }

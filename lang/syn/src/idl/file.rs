@@ -362,6 +362,7 @@ fn parse_ty_defs(ctx: &CrateContext, no_docs: bool) -> Result<Vec<IdlTypeDefinit
             } else {
                 None
             };
+
             let variants = enm
                 .variants
                 .iter()

@@ -204,6 +204,7 @@ pub enum IdlType {
     Option(Box<IdlType>),
     Vec(Box<IdlType>),
     Array(Box<IdlType>, usize),
+    HashSet(Box<IdlType>),
 }
 
 impl std::str::FromStr for IdlType {
@@ -243,33 +244,34 @@ impl std::str::FromStr for IdlType {
             "Vec<u8>" => IdlType::Bytes,
             "String" | "&str" | "&'staticstr" => IdlType::String,
             "Pubkey" => IdlType::PublicKey,
-            _ => match s.to_string().strip_prefix("Option<") {
-                None => match s.to_string().strip_prefix("Vec<") {
-                    None => {
-                        if s.to_string().starts_with('[') {
-                            array_from_str(&s)
-                        } else {
-                            IdlType::Defined(s.to_string())
-                        }
-                    }
-                    Some(inner) => {
-                        let inner_ty = Self::from_str(
-                            inner
-                                .strip_suffix('>')
-                                .ok_or_else(|| anyhow::anyhow!("Invalid option"))?,
-                        )?;
-                        IdlType::Vec(Box::new(inner_ty))
-                    }
-                },
-                Some(inner) => {
+            _ => {
+                if let Some(inner) = s.to_string().strip_prefix("Option<") {
                     let inner_ty = Self::from_str(
                         inner
                             .strip_suffix('>')
                             .ok_or_else(|| anyhow::anyhow!("Invalid option"))?,
                     )?;
                     IdlType::Option(Box::new(inner_ty))
+                } else if let Some(inner) = s.to_string().strip_prefix("Vec<") {
+                    let inner_ty = Self::from_str(
+                        inner
+                            .strip_suffix('>')
+                            .ok_or_else(|| anyhow::anyhow!("Invalid option"))?,
+                    )?;
+                    IdlType::Vec(Box::new(inner_ty))
+                } else if s.to_string().starts_with('[') {
+                    array_from_str(&s)
+                } else if let Some(inner) = s.to_string().strip_prefix("HashSet<") {
+                    let inner_str = inner
+                        .strip_suffix('>')
+                        .ok_or_else(|| anyhow::anyhow!("Invalid option"))?;
+
+                    let inner_ty = Self::from_str(inner_str)?;
+                    IdlType::HashSet(Box::new(inner_ty))
+                } else {
+                    IdlType::Defined(s.to_string())
                 }
-            },
+            }
         };
         Ok(r)
     }
@@ -325,6 +327,14 @@ mod tests {
         assert_eq!(
             IdlType::from_str("Vec<bool>").unwrap(),
             IdlType::Vec(Box::new(IdlType::Bool))
+        )
+    }
+
+    #[test]
+    fn hash_set() {
+        assert_eq!(
+            IdlType::from_str("HashSet<Pubkey>").unwrap(),
+            IdlType::HashSet(Box::new(IdlType::PublicKey))
         )
     }
 }
