@@ -2152,6 +2152,8 @@ fn deserialize_idl_type_to_json(
 
             JsonValue::Array(vec_data)
         }
+        IdlType::HashMap(..) => todo!(),
+        IdlType::Tuple(..) => todo!(),
     })
 }
 
