@@ -24,7 +24,7 @@ pub fn generate(f: &Field, accs: &AccountsStruct) -> proc_macro2::TokenStream {
     // If the field is optional we do all the inner checks as if the account
     // wasn't optional. If the account is init we also need to return an Option
     // by wrapping the resulting value with Some or returning None if it doesn't exist.
-    if f.is_optional && !constraints.is_empty() {
+    if f.optional && !constraints.is_empty() {
         let ident = &f.ident;
         let ty_decl = f.ty_decl(false);
         all_checks = match &constraints[0] {

@@ -36,7 +36,7 @@ pub fn generate(accs: &AccountsStruct) -> proc_macro2::TokenStream {
                         let name = &f.ident;
                         // Optional accounts have slightly different behavior here and
                         // we can't leverage the try_accounts implementation for zero and init.
-                        if f.is_optional {
+                        if f.optional {
                             // Thus, this block essentially reimplements the try_accounts 
                             // behavior with optional accounts minus the deserialziation.
                             let empty_behavior = if cfg!(feature = "allow-missing-optionals") {

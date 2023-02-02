@@ -65,7 +65,7 @@ fn constraints_cross_checks(fields: &[AccountField]) -> ParseResult<()> {
         .iter()
         .filter_map(|f| match f {
             AccountField::Field(field) if field.constraints.init.is_some() => {
-                if !field.is_optional {
+                if !field.optional {
                     required_init = true
                 }
                 Some(field)
@@ -80,7 +80,7 @@ fn constraints_cross_checks(fields: &[AccountField]) -> ParseResult<()> {
         if !fields
             .iter()
             // ensures that a non optional `system_program` is present with non optional `init`
-            .any(|f| f.ident() == "system_program" && !(required_init && f.is_optional()))
+            .any(|f| f.ident() == "system_program" && !(required_init && f.optional()))
         {
             return Err(ParseError::new(
                 init_fields[0].ident.span(),
@@ -95,7 +95,7 @@ fn constraints_cross_checks(fields: &[AccountField]) -> ParseResult<()> {
             InitKind::Token { .. } | InitKind::AssociatedToken { .. } | InitKind::Mint { .. } => {
                 if !fields
                     .iter()
-                    .any(|f| f.ident() == "token_program" && !(required_init && f.is_optional()))
+                    .any(|f| f.ident() == "token_program" && !(required_init && f.optional()))
                 {
                     return Err(ParseError::new(
                         init_fields[0].ident.span(),
@@ -108,7 +108,7 @@ fn constraints_cross_checks(fields: &[AccountField]) -> ParseResult<()> {
         // a_token needs associated token program.
         if let InitKind::AssociatedToken { .. } = kind {
             if !fields.iter().any(|f| {
-                f.ident() == "associated_token_program" && !(required_init && f.is_optional())
+                f.ident() == "associated_token_program" && !(required_init && f.optional())
             }) {
                 return Err(ParseError::new(
                     init_fields[0].ident.span(),
@@ -139,7 +139,7 @@ fn constraints_cross_checks(fields: &[AccountField]) -> ParseResult<()> {
                             field.ident.span(),
                             "the payer specified for an init constraint must be mutable.",
                         ));
-                    } else if associated_payer_field.is_optional && required_init {
+                    } else if associated_payer_field.optional && required_init {
                         return Err(ParseError::new(
                             field.ident.span(),
                             "the payer specified for a required init constraint must be required.",
@@ -180,7 +180,7 @@ fn constraints_cross_checks(fields: &[AccountField]) -> ParseResult<()> {
         .iter()
         .filter_map(|f| match f {
             AccountField::Field(field) if field.constraints.realloc.is_some() => {
-                if !field.is_optional {
+                if !field.optional {
                     required_realloc = true
                 }
                 Some(field)
@@ -193,7 +193,7 @@ fn constraints_cross_checks(fields: &[AccountField]) -> ParseResult<()> {
         // realloc needs system program.
         if !fields
             .iter()
-            .any(|f| f.ident() == "system_program" && !(required_realloc && f.is_optional()))
+            .any(|f| f.ident() == "system_program" && !(required_realloc && f.optional()))
         {
             return Err(ParseError::new(
                 realloc_fields[0].ident.span(),
@@ -224,7 +224,7 @@ fn constraints_cross_checks(fields: &[AccountField]) -> ParseResult<()> {
                             field.ident.span(),
                             "the realloc::payer specified for an realloc constraint must be mutable.",
                         ));
-                    } else if associated_payer_field.is_optional && required_realloc {
+                    } else if associated_payer_field.optional && required_realloc {
                         return Err(ParseError::new(
                             field.ident.span(),
                             "the realloc::payer specified for a required realloc constraint must be required.",
@@ -249,12 +249,12 @@ pub fn parse_account_field(f: &syn::Field) -> ParseResult<AccountField> {
     let docs = docs::parse(&f.attrs);
     let account_field = match is_field_primitive(f)? {
         true => {
-            let (ty, is_optional) = parse_ty(f)?;
+            let (ty, optional) = parse_ty(f)?;
             let account_constraints = constraints::parse(f, Some(&ty))?;
             AccountField::Field(Field {
                 ident,
                 ty,
-                is_optional,
+                optional,
                 constraints: account_constraints,
                 docs,
             })

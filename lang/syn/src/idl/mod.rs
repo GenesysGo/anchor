@@ -73,7 +73,7 @@ pub struct IdlAccount {
     pub is_mut: bool,
     pub is_signer: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_optional: Option<bool>,
+    pub optional: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub docs: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none", default)]
@@ -260,7 +260,11 @@ impl std::str::FromStr for IdlType {
                         .ok_or_else(|| anyhow::anyhow!("Invalid option"))?;
 
                     if inner_str.starts_with("(") && inner_str.ends_with(")") {
-                        let stripped = inner_str.strip_prefix("(").unwrap().strip_suffix(")").unwrap();
+                        let stripped = inner_str
+                            .strip_prefix("(")
+                            .unwrap()
+                            .strip_suffix(")")
+                            .unwrap();
 
                         let inner_str_split: Vec<_> = stripped.split(",").collect();
 

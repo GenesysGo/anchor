@@ -157,7 +157,7 @@ impl AccountsStruct {
     pub fn has_optional(&self) -> bool {
         for field in &self.fields {
             if let AccountField::Field(field) = field {
-                if field.is_optional {
+                if field.optional {
                     return true;
                 }
             }
@@ -171,7 +171,7 @@ impl AccountsStruct {
             .iter()
             .find(|f| *f.ident() == tts_to_string(field));
         if let Some(matching_field) = matching_field {
-            matching_field.is_optional()
+            matching_field.optional()
         } else {
             false
         }
@@ -193,9 +193,9 @@ impl AccountField {
         }
     }
 
-    fn is_optional(&self) -> bool {
+    fn optional(&self) -> bool {
         match self {
-            AccountField::Field(field) => field.is_optional,
+            AccountField::Field(field) => field.optional,
             AccountField::CompositeField(_) => false,
         }
     }
@@ -224,7 +224,7 @@ pub struct Field {
     pub ident: Ident,
     pub constraints: ConstraintGroup,
     pub ty: Ty,
-    pub is_optional: bool,
+    pub optional: bool,
     /// IDL Doc comment
     pub docs: Option<Vec<String>>,
 }
@@ -289,7 +289,7 @@ impl Field {
                 #container_ty<#account_ty>
             },
         };
-        if self.is_optional && !ignore_option {
+        if self.optional && !ignore_option {
             quote! {
                 Option<#inner_ty>
             }
