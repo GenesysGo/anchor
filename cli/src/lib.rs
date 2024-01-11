@@ -2760,9 +2760,6 @@ fn write_idl(idl: &Idl, out: OutFile) -> Result<()> {
 
 /// Print `base64+borsh` encoded IDL instruction.
 fn print_idl_instruction(ix_name: &str, ix: &Instruction, idl_address: &Pubkey) -> Result<()> {
-    use base64::engine::general_purpose::STANDARD;
-    use base64::Engine;
-
     println!("Print only mode. No execution!");
     println!("Instruction: {ix_name}");
     println!("IDL address: {idl_address}");
@@ -2784,7 +2781,7 @@ fn print_idl_instruction(ix_name: &str, ix: &Instruction, idl_address: &Pubkey) 
 
     println!(
         "Base64 encoded instruction: {}",
-        STANDARD.encode(serialized_ix)
+        base64::encode(serialized_ix)
     );
 
     Ok(())
